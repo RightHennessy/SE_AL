@@ -5,6 +5,7 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import androidx.sqlite.db.SupportSQLiteDatabase
 import com.example.se_al.data.announcement.Announcement
 import com.example.se_al.data.announcement.AnnouncementDao
 import com.example.se_al.data.assignment.Assignment
@@ -27,6 +28,8 @@ import com.example.se_al.data.sub_lecture.SubLecture
 import com.example.se_al.data.sub_lecture.SubLectureDao
 import com.example.se_al.data.user.DAO
 import com.example.se_al.data.user.User
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 
 // Database
 
@@ -50,17 +53,43 @@ abstract class UserDatabase : RoomDatabase() {
         private var instance: UserDatabase? = null
 
         @Synchronized
-        fun getInstance(context: Context): UserDatabase? {
+        fun getInstance(context: Context/*, scope:CoroutineScope*/): UserDatabase? {
+            // null이면 database 생성
             if (instance == null) {
                 synchronized(UserDatabase::class){
                     instance = Room.databaseBuilder(
                         context.applicationContext,
                         UserDatabase::class.java,
                         "user-database"
-                    ).build()
+                    )//.addCallback(UserDatabaseCallback(scope))
+                     .fallbackToDestructiveMigration()
+                     .build()
                 }
             }
             return instance
         }
+
+        /*
+        // DataBase 첫 생성 시 행동
+        private class UserDatabaseCallback(
+            private val scope: CoroutineScope
+        ) : RoomDatabase.Callback() {
+
+            override fun onCreate(db: SupportSQLiteDatabase) {
+                super.onCreate(db)
+                instance?.let { database ->
+                    scope.launch {
+                        populateDatabase(database.assignmentDao())
+                    }
+                }
+            }
+            suspend fun populateDatabase(assignmentDao: AssignmentDao) {
+                //userDao.deleteAll()
+                // Add User
+                assignmentDao.insert(Assignment("ㅇㄹ","ㅇㄹ","ㅇㄹ","ㅇㄹ","ㅇㄹ","ㅇㄹ","ㅇㄹ","ㅇㄹ","ㅇㄹ","ㅇㄹ"))
+            }
+        }
+        */
     }
+
 }
